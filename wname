@@ -1,0 +1,28 @@
+#!/usr/bin/python3
+
+import argparse
+import json
+import subprocess
+import sys
+
+parser = argparse.ArgumentParser(description='Rename an i3 workspace.')
+parser.add_argument('num', nargs='?', help='The number of the workspace to rename. Defaults to the current workspace.')
+parser.add_argument('name', help='The new name for the workspace.')
+args = parser.parse_args()
+
+workspaces = subprocess.check_output(['i3-msg', '-t', 'get_workspaces'])
+ws_json = json.loads(workspaces)
+
+old_num  = None
+old_name = None
+for workspace in ws_json:
+    if ( args.num and args.num == str(workspace['num']) ) or ( not args.num and workspace['visible'] ):
+        old_num = str(workspace['num'])
+        old_name = workspace['name']
+        break
+
+if old_num:
+    subprocess.check_output(['i3-msg', 'rename workspace "' + old_name + '" to "' + old_num + ': ' + args.name + '"'])
+else:
+    print('Workspace does not exist.', file=sys.stderr)
+    sys.exit(1)
